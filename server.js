@@ -1,5 +1,5 @@
 import { createServer } from "http";
-import WebSocket, { WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 
 const host = "localhost";
 const port = 5000
@@ -10,8 +10,7 @@ const server = createServer((req, res)=>{
 });
 
 
-const wss = new WebSocketServer({ server });
-
+ const wss = new WebSocketServer({ server });
 
 const connectedUsers = {}
 const offlineMessages = {}
@@ -26,7 +25,7 @@ wss.on("connection", (ws, req) => {
 
     console.log("Connected Users:", Object.keys(connectedUsers));
 
-
+//Checks if there are messages in offlineMessages object
     if (offlineMessages[userId] && offlineMessages[userId].length > 0) {
         offlineMessages[userId].forEach(msg => ws.send(JSON.stringify(msg)));
         offlineMessages[userId] = [];
