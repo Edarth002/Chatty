@@ -1,5 +1,6 @@
 import { createServer } from "http";
-import { WebSocketServer } from "ws";
+import { RawData, WebSocket, WebSocketServer } from "ws";
+import { IncomingMessage } from "http";
 
 const host = "localhost";
 const port = 5000
@@ -10,12 +11,31 @@ const server = createServer((req, res)=>{
 });
 
 
+interface Message {
+    id: string,
+    type?: "message",
+    from: string,
+    to:string,
+    content: string,
+    timestamp: number
+}
+
+interface AuthenticatedWebsocket extends WebSocket{
+    userId: string
+}
+
+
+
  const wss = new WebSocketServer({ server });
 
-const connectedUsers = {}
-const offlineMessages = {}
+const connectedUsers:Record<string, AuthenticatedWebsocket[]> = {}
+const offlineMessages:Record<string, Message[]> = {}
 
-wss.on("connection", (ws, req) => {
+wss.on("connection", (ws:AuthenticatedWebsocket, req:IncomingMessage) => {
+if (!req.url) {
+    return ws.close()
+}
+
     const reqUrl = new URL(req.url, `http://${req.headers.host}`);
     ws.userId = (reqUrl.searchParams.get("userId") || "unknown").trim();
     const userId = ws.userId;
@@ -31,9 +51,9 @@ wss.on("connection", (ws, req) => {
         offlineMessages[userId] = [];
     }
 
-    ws.on("message", (data)=>{
+    ws.on("message", (data:RawData)=>{
         try {
-            const parsed = JSON.parse(data);
+            const parsed = JSON.parse(data.toString());
             handleMessage(parsed, ws)
         } catch (error) {
             console.log("Invalid Message Format");
@@ -55,7 +75,7 @@ wss.on("connection", (ws, req) => {
     
 })
 
-function handleMessage(message, ws) {
+function handleMessage(message:Message, ws:AuthenticatedWebsocket) {
     const { type, to, content } = message;
     const from = ws.userId;
 
