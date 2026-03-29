@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return new Response(
-        JSON.stringify({ error: "Username or email already exists" }),
+        JSON.stringify({ error: "Registration failed" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json" },

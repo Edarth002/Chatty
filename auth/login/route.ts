@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
     if (!user) {
       return new Response(
-        JSON.stringify({ error: "Invalid username or password" }),
+        JSON.stringify({ error: "Authentication failed" }),
         {
           status: 401,
           headers: { "Content-Type": "application/json" },
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
     if (!isPasswordValid) {
       return new Response(
-        JSON.stringify({ error: "Invalid username or password" }),
+        JSON.stringify({ error: "Authentication failed" }),
         {
           status: 401,
           headers: { "Content-Type": "application/json" },
