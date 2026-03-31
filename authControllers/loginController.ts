@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { registerSchema } from "../authschema.js";
-import prisma from "../../lib/prisma.js";
+import prisma from "../lib/prisma.js";
+import { loginSchema } from "./authschema.js";
 import { ZodError } from "zod";
 
 export async function POST(request: Request) {
@@ -11,33 +11,33 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { username, email, password } = registerSchema.parse(body);
+    const { username, password } = loginSchema.parse(body);
 
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ username }, { email }],
-      },
+    const user = await prisma.user.findUnique({
+      where: { username },
     });
 
-    if (existingUser) {
+    if (!user) {
       return new Response(
-        JSON.stringify({ error: "Registration failed" }),
+        JSON.stringify({ error: "Authentication failed" }),
         {
-          status: 400,
+          status: 401,
           headers: { "Content-Type": "application/json" },
         }
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    const user = await prisma.user.create({
-      data: {
-        username,
-        email,
-        password: hashedPassword,
-      },
-    });
+    if (!isPasswordValid) {
+      return new Response(
+        JSON.stringify({ error: "Authentication failed" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
 
     const token = jwt.sign(
       { userId: user.id, username: user.username },
@@ -47,11 +47,11 @@ export async function POST(request: Request) {
 
     return new Response(
       JSON.stringify({
-        message: "User registered successfully",
+        message: "Login successful",
         token,
       }),
       {
-        status: 201,
+        status: 200,
         headers: { "Content-Type": "application/json" },
       }
     );
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       );
     }
 
-    console.error("Error registering user:", error);
+    console.error("Login error:", error);
 
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
