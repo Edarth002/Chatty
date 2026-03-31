@@ -1,60 +1,16 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import prisma from "../lib/prisma.js";
+import { LoginUser } from "../lib/authService.js";
 import { loginSchema } from "./authschema.js";
 import { ZodError } from "zod";
 
 export async function POST(request: Request) {
   try {
-    if (!process.env.JWT_SECRET) {
-      throw new Error("JWT_SECRET is not defined");
-    }
-
+    
     const body = await request.json();
-    const { username, password } = loginSchema.parse(body);
+    const parsed = loginSchema.parse(body);
 
-    const user = await prisma.user.findUnique({
-      where: { username },
-    });
-
-    if (!user) {
-      return new Response(
-        JSON.stringify({ error: "Authentication failed" }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return new Response(
-        JSON.stringify({ error: "Authentication failed" }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const token = jwt.sign(
-      { userId: user.id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    return new Response(
-      JSON.stringify({
-        message: "Login successful",
-        token,
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    const {status, body: responseBody} = await LoginUser(parsed);
+  
+    
   } catch (error) {
     if (error instanceof ZodError) {
       return new Response(
