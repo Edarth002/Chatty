@@ -1,16 +1,22 @@
-import express from "express";
+import { Router } from "express";
 import { RegisterUser } from "../lib/authService.ts";
 import { registerSchema } from "../authControllers/authschema.ts";
+import { ZodError } from "zod";
 
-const app = express();
+const router = Router();
 
-app.post("/auth/register", async (req, res) => {
+
+router.post("/auth/register", async (req, res) => {
   try {
     const response = await RegisterUser(registerSchema.parse(req.body));    
     res.status(response.status).json(response.body);
   } catch (error) {
+    if (error instanceof ZodError) {
+      res.status(400).json({ error: error});
+    }
+
     res.status(500).json({ error: "Internal Server Error" });   
     }
 });
 
-export default app;
+export default router;

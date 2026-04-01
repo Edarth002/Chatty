@@ -6,8 +6,10 @@ import registerRoute from "./authRoutes/registerRoute.ts";
 const app = express();
 const port = 4000;
 
-app.use("/api/login", loginRoute);
-app.use("/api/register", registerRoute);
+app.use(express.json());
+
+app.use("/api", loginRoute);
+app.use("/api", registerRoute);
 
 
 app.get("/", (req, res) => {

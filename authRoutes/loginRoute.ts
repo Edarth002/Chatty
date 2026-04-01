@@ -1,10 +1,10 @@
-import express from "express";
+import { Router } from "express";
 import { loginSchema } from "../authControllers/authschema.ts";
 import { LoginUser } from "../lib/authService.ts";
 
-const app = express();
+const router = Router();
 
-app.post("/auth/login", async (req, res) => {
+router.post("/auth/login", async (req, res) => {
   try {
     const response = await LoginUser(loginSchema.parse(req.body));
     res.status(response.status).json(response.body);
@@ -14,4 +14,4 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
-export default app;
+export default router;
