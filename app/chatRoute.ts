@@ -1,12 +1,12 @@
+import express from "express";
 import { createServer } from "http";
 import { RawData, WebSocket, WebSocketServer } from "ws";
 import { IncomingMessage } from "http";
 import verifyToken from "../lib/verifyToken.ts";
 
-const server = createServer((req, res)=>{
-    res.writeHead(200, {"Content-Type": "text/plain"});
-    res.end("Hello World\n")
-});
+const app = express();
+
+const server = createServer(app);
 
 
 interface Message {
@@ -35,8 +35,7 @@ if (!req.url) {
 
 if (verifyToken(req.url.split("?token=")[1] || "") === null) {
     console.log("Unauthorized connection attempt");
-    ws.close();
-    throw new Error("Unauthorized connection attempt");
+    return ws.close();
 }
     
 
@@ -82,8 +81,8 @@ function handleMessage(message:Message, ws:AuthenticatedWebsocket) {
     if (verifyToken(ws.url?.split("?token=")[1] || "") === null){
         console.log("Unauthorized to send message because user is not authenticated");
         
-        ws.close();
-        throw new Error("Unauthorized to send message because user is not authenticated");
+        return ws.close();
+        
     }
 
     const { type, to, content } = message;

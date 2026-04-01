@@ -2,10 +2,12 @@ import http from "http";
 import express from "express";
 import loginRoute from "./authRoutes/loginRoute.ts";
 import registerRoute from "./authRoutes/registerRoute.ts";
+import cors from "cors";
 
 const app = express();
 const port = 4000;
 
+app.use(cors());
 app.use(express.json());
 
 app.use("/api", loginRoute);
