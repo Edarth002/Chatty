@@ -1,9 +1,7 @@
 import { createServer } from "http";
 import { RawData, WebSocket, WebSocketServer } from "ws";
 import { IncomingMessage } from "http";
-
-const host = "localhost";
-const port = 5000
+import verifyToken from "../lib/verifyToken.ts";
 
 const server = createServer((req, res)=>{
     res.writeHead(200, {"Content-Type": "text/plain"});
@@ -35,6 +33,10 @@ if (!req.url) {
     return ws.close()
 }
 
+if (verifyToken(req.url.split("?token=")[1] || "") === null) {
+    console.log("Unauthorized connection attempt");
+    return ws.close();
+}
     
 
     const reqUrl = new URL(req.url, `http://${req.headers.host}`);
