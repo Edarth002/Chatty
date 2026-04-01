@@ -11,6 +11,8 @@ router.post("/auth/register", async (req, res) => {
     const response = await RegisterUser(registerSchema.parse(req.body));    
     res.status(response.status).json(response.body);
   } catch (error) {
+    console.error("Something is wrong here: ", error);
+    
     if (error instanceof ZodError) {
       res.status(400).json({ error: error});
     }

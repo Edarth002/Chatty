@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
 import prisma from "./prisma.ts";
 import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export async function RegisterUser({username, email, password}: {username: string, email: string, password: string}) {
     if (!process.env.JWT_SECRET) {
