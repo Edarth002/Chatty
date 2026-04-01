@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import prisma from "./prisma.js";
+import prisma from "./prisma.ts";
 import bcrypt from "bcrypt";
 
 export async function RegisterUser({username, email, password}: {username: string, email: string, password: string}) {

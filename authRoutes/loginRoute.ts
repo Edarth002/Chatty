@@ -1,17 +1,17 @@
 import express from "express";
-import { POST } from "../authControllers/loginController.js";
+import { loginSchema } from "../authControllers/authschema.ts";
+import { LoginUser } from "../lib/authService.ts";
 
 const app = express();
 
 app.post("/auth/login", async (req, res) => {
   try {
-    const response = await POST(req);
-
-    res
-      .status(response.status)
-      .json(JSON.parse(response.body));
+    const response = await LoginUser(loginSchema.parse(req.body));
+    res.status(response.status).json(response.body);
 
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+export default app;

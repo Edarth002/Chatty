@@ -45,8 +45,7 @@ if (!req.url) {
     connectedUsers[userId].push(ws);
 
     console.log("Connected Users:", Object.keys(connectedUsers));
-
-//Checks if there are messages in offlineMessages object
+    
     if (offlineMessages[userId] && offlineMessages[userId].length > 0) {
         offlineMessages[userId].forEach(msg => ws.send(JSON.stringify(msg)));
         offlineMessages[userId] = [];
