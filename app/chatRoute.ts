@@ -35,7 +35,8 @@ if (!req.url) {
 
 if (verifyToken(req.url.split("?token=")[1] || "") === null) {
     console.log("Unauthorized connection attempt");
-    return ws.close();
+    ws.close();
+    throw new Error("Unauthorized connection attempt");
 }
     
 
@@ -78,6 +79,13 @@ if (verifyToken(req.url.split("?token=")[1] || "") === null) {
 })
 
 function handleMessage(message:Message, ws:AuthenticatedWebsocket) {
+    if (verifyToken(ws.url?.split("?token=")[1] || "") === null){
+        console.log("Unauthorized to send message because user is not authenticated");
+        
+        ws.close();
+        throw new Error("Unauthorized to send message because user is not authenticated");
+    }
+
     const { type, to, content } = message;
     const from = ws.userId;
 
