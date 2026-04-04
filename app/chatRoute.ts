@@ -33,14 +33,26 @@ if (!req.url) {
     return ws.close()
 }
 
-if (verifyToken(req.url.split("?token=")[1] || "") === null) {
-    console.log("Unauthorized connection attempt");
-    return ws.close();
-}
     
 
     const reqUrl = new URL(req.url, `http://${req.headers.host}`);
-    ws.userId = (reqUrl.searchParams.get("userId") || "unknown").trim();
+    const token = reqUrl.searchParams.get("token") || "";
+
+    if(!token){
+        console.log("Connection rejected: No token provided");
+        return ws.close();
+    }
+
+    const decoded = verifyToken(token);
+
+    if (!decoded) {
+        console.log("Connection rejected: Invalid token");
+        return ws.close();
+    }
+
+    ws.userId = String(decoded.userId);
+    console.log("Conversion to String successful");
+    
     const userId = ws.userId;
 
     if (!connectedUsers[userId]) connectedUsers[userId] = [];
@@ -56,6 +68,10 @@ if (verifyToken(req.url.split("?token=")[1] || "") === null) {
     ws.on("message", (data:RawData)=>{
         try {
             const parsed = JSON.parse(data.toString());
+            if (typeof parsed !== "object" || !parsed.type || !parsed.to || !parsed.content) {
+                console.log("Invalid message structure");
+                return;
+            }
             handleMessage(parsed, ws)
         } catch (error) {
             console.log("Invalid Message Format");
@@ -78,15 +94,24 @@ if (verifyToken(req.url.split("?token=")[1] || "") === null) {
 })
 
 function handleMessage(message:Message, ws:AuthenticatedWebsocket) {
-    if (verifyToken(ws.url?.split("?token=")[1] || "") === null){
-        console.log("Unauthorized to send message because user is not authenticated");
-        
-        return ws.close();
-        
-    }
 
     const { type, to, content } = message;
     const from = ws.userId;
+
+    if(message.to === from){
+        console.log("Cannot send message to self");
+        return;
+    }
+
+    if(!message.to || !message.content){
+        console.log("Missing recipient or content");
+        return;
+    }
+
+    if(message.type !== "message"){
+        console.log("Unsupported message type");
+        return;
+    }
 
     if (type === "message") {
         const msgObj = {
